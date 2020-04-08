@@ -1,27 +1,11 @@
 const Tour = require('../models/tourModel');
 
-// const tours = JSON.parse(
-//   fs.readFileSync(`./starter/dev-data/data/tours-simple.json`)
-// );
-
-// exports.checkId = (req, res, next, val) => {
-//   console.log(`Tour id is ${val}`);
-//   const id = Number(req.params.id);
-//   if (id > tours.length) {
-//     return res.status(404).json({ status: 'Fail', message: 'Invalid ID' });
-//   }
-//   next();
-// };
-
-// exports.checkBodyParameters = (req, res, next) => {
-//   if (!req.body.price || !req.body.name) {
-//     return res.status(400).json({
-//       status: 'Bad Request',
-//       message: 'Request does not contain correct parameters'
-//     });
-//   }
-//   next();
-// };
+exports.aliasTopTours = (req, res, next) => {
+  req.query.limit = '5';
+  req.query.sort = '-ratingsAverage,price';
+  req.query.fields = 'name,price,ratingsAverage,summary,difficulty';
+  next();
+};
 
 exports.getAllTours = async (req, res) => {
   try {
@@ -78,7 +62,7 @@ exports.getAllTours = async (req, res) => {
   } catch (error) {
     res.status(400).json({
       status: 'error',
-      error
+      error: error.message
     });
   }
 };
