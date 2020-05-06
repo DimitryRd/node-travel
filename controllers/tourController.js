@@ -88,3 +88,84 @@ exports.deleteTour = async (req, res) => {
     res.status(400).json({ status: 'success', error: error.message });
   }
 };
+
+exports.getTourStats = async (req, res) => {
+  try {
+    const stats = await Tour.aggregate([
+      {
+        $match: { ratingsAverage: { $gte: 4.5 } }
+      },
+      {
+        $group: {
+          _id: { $toUpper: '$difficulty' },
+          numTours: { $sum: 1 },
+          numRatings: { $sum: '$ratingsQuantity' },
+          avrRating: { $avg: '$ratingsAverage' },
+          avgPrice: { $avg: '$price' },
+          minPrice: { $min: '$price' },
+          maxPrice: { $max: '$price' }
+        }
+      },
+      {
+        $sort: { avgPrice: 1 }
+      },
+      {
+        $match: { _id: { $ne: 'EASY' } }
+      }
+    ]);
+    res.status(200).json({ status: 'OK', data: { stats } });
+  } catch (error) {
+    res.status(400).json({
+      status: 'error',
+      error
+    });
+  }
+};
+
+exports.getMonthlyPlan = async (req, res) => {
+  try {
+    const { year } = req.params;
+    const plan = await Tour.aggregate([
+      {
+        $unwind: '$startDates'
+      },
+      {
+        $match: {
+          startDates: {
+            $gte: new Date(`${year}-01-01`),
+            $lte: new Date(`${year}-12-31`)
+          }
+        }
+      },
+      {
+        $group: {
+          _id: { $month: '$startDates' },
+          numMonths: { $sum: 1 },
+          tours: { $push: '$name' },
+          numRatings: { $sum: '$ratingsQuantity' },
+          avrRating: { $avg: '$ratingsAverage' },
+          avgPrice: { $avg: '$price' },
+          minPrice: { $min: '$price' },
+          maxPrice: { $max: '$price' }
+        }
+      },
+      {
+        $addFields: { month: '$_id' }
+      },
+      {
+        $project: {
+          _id: 0
+        }
+      },
+      {
+        $sort: { numMonths: -1 }
+      },
+      {
+        $limit: 6
+      }
+    ]);
+    res.status(200).json({ status: 'OK', data: { plan } });
+  } catch (error) {
+    res.status(400).json({ status: 'Fail', error });
+  }
+};
