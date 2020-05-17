@@ -26,15 +26,6 @@ app.use('/api/v1/tours', tourRoutes);
 app.use('/api/v1/tours', userRoutes);
 
 app.all('*', (req, res, next) => {
-  // res.status(404).json({
-  //   status: 'Fail',
-  //   message: `Cant find ${req.originalUrl} on this server`
-  // });
-
-  // const err = new Error('Fucking error!');
-  // err.status = 'Fail';
-  // err.statusCode = 404;
-
   next(new AppError(`Cant find ${req.originalUrl} on this server`, 404));
 });
 
